@@ -1,7 +1,6 @@
-import { ApplicationEventData } from "tns-core-modules/application";
-import * as application from "tns-core-modules/application";
-import { AndroidActivityRequestPermissionsEventData, LaunchEventData } from "tns-core-modules/application";
-import * as utils from "tns-core-modules/utils/utils";
+import { ApplicationEventData, Application } from "@nativescript/core";
+import { AndroidActivityRequestPermissionsEventData, LaunchEventData } from "@nativescript/core";
+import * as utils from "@nativescript/core/utils";
 import { TNSPushNotification } from "./";
 
 declare const androidx, com: any;
@@ -12,8 +11,8 @@ let notificationHandler: (notification: TNSPushNotification) => void;
 let pendingNotifications: Array<TNSPushNotification> = [];
 let appInForeground = false;
 
-application.on(application.resumeEvent, (args: ApplicationEventData) => appInForeground = true);
-application.on(application.suspendEvent, () => appInForeground = false);
+Application.on(Application.resumeEvent, (args: ApplicationEventData) => appInForeground = true);
+Application.on(Application.suspendEvent, () => appInForeground = false);
 
 export function getDevicePushToken(): Promise<string> {
   return new Promise<string>((resolve, reject) => {
@@ -55,7 +54,7 @@ export function setNotificationHandler(handler: (notification: TNSPushNotificati
 }
 
 function getActivity() {
-  return application.android.foregroundActivity || application.android.startActivity;
+  return Application.android.foregroundActivity || Application.android.startActivity;
 }
 
 function writeExternalStoragePermissionGranted(): boolean {
@@ -70,13 +69,13 @@ function requestWriteExternalStoragePermission(): Promise<boolean> {
   return new Promise((resolve, reject) => {
     const onPermissionResultCallback = (args: AndroidActivityRequestPermissionsEventData) => {
       if (args.requestCode === WRITE_EXTERNAL_STORAGE_PERMISSION_REQUEST_CODE && args.grantResults.length === 1) {
-        application.android.off(application.AndroidApplication.activityRequestPermissionsEvent, onPermissionResultCallback);
+        Application.android.off(Application.AndroidApplication.activityRequestPermissionsEvent, onPermissionResultCallback);
         resolve(args.grantResults[0] !== android.content.pm.PackageManager.PERMISSION_DENIED);
       }
     };
 
     // grab the permission dialog result
-    application.android.on(application.AndroidApplication.activityRequestPermissionsEvent, onPermissionResultCallback);
+    Application.android.on(Application.AndroidApplication.activityRequestPermissionsEvent, onPermissionResultCallback);
 
     // invoke the permission dialog
     androidx.core.app.ActivityCompat.requestPermissions(getActivity(), [android.Manifest.permission.WRITE_EXTERNAL_STORAGE], WRITE_EXTERNAL_STORAGE_PERMISSION_REQUEST_CODE);
